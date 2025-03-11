@@ -42,14 +42,6 @@ async function handleEvent(event) {
     }
   }
 
-  // 瓦斯推估邏輯
-  if (text.includes('瓦斯') && (text.includes('沒了') || text.includes('快用完'))) {
-    const groupId = event.source.groupId;
-    const lastOrder = await db.getLastGasOrder(groupId);
-    if (!lastOrder || (Date.now() - new Date(lastOrder) > 30 * 24 * 60 * 60 * 1000)) {
-      await client.pushMessage(groupId, { type: 'text', text: '看起來該訂一桶新瓦斯了！' });
-    }
-  }
 }
 
 function parseTime(input) {

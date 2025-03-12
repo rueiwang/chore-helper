@@ -12,9 +12,11 @@
     "@line/bot-sdk": "^9.7.1",
     "axios": "^1.8.2",
     "body-parser": "^1.20.3",
+    "chrono-node": "^2.7.8",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase": "^11.4.0",
-    "node-schedule": "^2.1.1"
+    "node-schedule": "^2.1.1",
+    "winston": "^3.17.0"
   }
 }

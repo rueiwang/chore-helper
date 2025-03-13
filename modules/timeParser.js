@@ -7,7 +7,6 @@ const logger = require('./logger.js');
  * @returns {string} - 轉換後的英文時間字串，例如 "tomorrow 10 AM" 或 "next Friday"
  */
 function convertChineseToChrono(chineseStr, refDate = new Date()) {
-  // 定義星期轉換映射，支援「星期X」和「週X」
   const weekdayMap = {
     一: 'Monday',
     二: 'Tuesday',
@@ -18,7 +17,6 @@ function convertChineseToChrono(chineseStr, refDate = new Date()) {
     日: 'Sunday',
   };
 
-  // 定義常用中文時間詞彙到英文的映射
   const timeMap = {
     今天: 'today',
     明天: 'tomorrow',
@@ -63,43 +61,46 @@ function convertChineseToChrono(chineseStr, refDate = new Date()) {
   let result = chineseStr;
   let prefix = '';
 
-  if (/(今天|明天)/.test(result)) {
+  // 處理包含「今天/明天/上午/下午」的字串，將其轉成 prefix
+  if (/^(今天|明天)/.test(result)) {
     prefix = timeMap[result.substring(0, 2)] + ' ';
     result = result.substring(2);
   }
 
-  // 1. 處理日期格式「XXXX年XX月XX日」
-  if (/(\d{4})年(\d{1,2})月(\d{1,2})日/.test(result)) {
-    result = result.replace(/(\d{4})年(\d{1,2})月(\d{1,2})日/, '$1-$2-$3'); // 轉為 "YYYY-MM-DD"
-  }
-
-  // 2. 處理「X月X日」
-  if (/(\d{1,2})月(\d{1,2})日/.test(result)) {
-    result = result.replace(/(\d{1,2})月(\d{1,2})日/, `${year}-$1-$2`); // 轉為 "YYYY-MM-DD"
-  }
-
-  // 3. 處理星期（支援「星期X」或「週X」）
-  if (/(上|下)?(星期|週)([一二三四五六日])/.test(result)) {
-    result = result.replace(
-      /([上|下])?(星期|週)([一二三四五六日])/g,
+  // 處理星期（支援「下星期X」或「下週X」）
+  if (/^(下)?(星期|週)([一二三四五六日])/.test(result)) {
+    prefix += result.replace(
+      /([下])?(星期|週)([一二三四五六日])/g,
       (match, prefix, week, day) => {
         return `${timeMap[prefix] || ''} ${weekdayMap[day]}`;
       }
     );
+
+    result = result.replace(/^(下)?(星期|週)([一二三四五六日])/, '').trim();
+    console.log('處理星期: ', result, prefix);
   }
 
-  // 6. 處理相對時間「X天前」「X天後」
-  if (/(\d+)(天前|天後)/.test(result)) {
-    result = result.replace(/(\d+)(天前)/, '$1 days ago');
-    result = result.replace(/(\d+)(天後)/, 'in $1 days');
-  }
-
-  if (/(上午|下午)/.test(result)) {
+  if (/^(上午|下午)/.test(result)) {
     prefix += timeMap[result.substring(0, 2)] + ' ';
     result = result.substring(2);
   }
 
-  // 8. 處理具體時間「上午X點」「下午X點Y分」
+  // 處理日期格式「XXXX年XX月XX日」
+  if (/(\d{4})年(\d{1,2})月(\d{1,2})日/.test(result)) {
+    result = result.replace(/(\d{4})年(\d{1,2})月(\d{1,2})日/, '$1-$2-$3'); // 轉為 "YYYY-MM-DD"
+  }
+
+  // 處理「X月X日」
+  if (/(\d{1,2})月(\d{1,2})日/.test(result)) {
+    result = result.replace(/(\d{1,2})月(\d{1,2})日/, `${year}-$1-$2`); // 轉為 "YYYY-MM-DD"
+  }
+
+  // 處理相對時間」「X天後」
+  if (/(\d+)(天後)/.test(result)) {
+    result = result.replace(/(\d+)(天後)/, 'in $1 days');
+  }
+
+  // 8. 處理具體時間「X點」「X點Y分」
   if (/([\d])點(\d*)分?/.test(result)) {
     result = result.replace(/([\d])點(\d*)分?/, (match, hour, minute) => {
       const minuteStr = minute ? `:${minute.padStart(2, '0')}` : ':00';
@@ -120,37 +121,36 @@ function convertChineseToChrono(chineseStr, refDate = new Date()) {
     );
   }
 
-  // 9. 替換其他簡單時間詞彙
-  //   Object.keys(timeMap).forEach((key) => {
-  //     result = result.replace(new RegExp(key, 'g'), timeMap[key]);
-  //   });
-
   // 10. 清理多餘空格並返回
   return (prefix + result).trim().replace(/\s+/g, ' ');
 }
 
-// 測試範例
-// const testCases = [
-//   '今天',
-//   '明天上午10點',
-//   '昨天',
-//   '星期五',
-//   '下週五',
-//   '上星期三',
-//   '2025年3月11日',
-//   '3月11日',
-//   '下午3點30分',
-//   '2天後',
-//   '下午五點半',
-// ];
+// 測試範例;
+const testCases = [
+  '今天',
+  '明天上午10點',
+  '星期五',
+  '下週五',
+  '下週三下午兩點',
+  '2025年3月11日',
+  '3月11日',
+  '下午3點30分',
+  '2天後',
+  '下午五點半',
+  //   不支援過去時間
+  '昨天',
+  '1天前',
+  '上週三十點',
+  '上星期三',
+];
 
-// testCases.forEach((test) => {
-//   const converted = convertChineseToChrono(test);
-//   console.log(`中文: ${test} -> 英文: ${converted}`);
-//   const parsed = chrono.parseDate(converted, new Date());
-//   console.log(`解析結果: ${parsed}`);
-//   console.log('---');
-// });
+testCases.forEach((test) => {
+  const converted = convertChineseToChrono(test);
+  console.log(`中文: ${test} -> 英文: ${converted}`);
+  const parsed = chrono.parseDate(converted, new Date());
+  console.log(`解析結果: ${parsed}`);
+  console.log('---');
+});
 
 function parseTime(input, referenceDate = new Date()) {
   const chronoString = convertChineseToChrono(input, referenceDate);

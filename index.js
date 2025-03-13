@@ -29,54 +29,53 @@ async function handleEvent(event) {
     return;
   const { text, mention } = event.message;
   const { groupId } = event.source;
-  console.log('29', text.trim().startsWith('@bot'), mention);
 
   // 只有在開頭是 @bot 或是標註機器人時才回應
   if (
     !text.trim().startsWith('@bot') ||
     (mention && !mention?.mentionees.some((mentionee) => mentionee.isSelf))
   ) {
-    console.log(
-      '36',
-      !text.trim().startsWith('@bot'),
-      !mention?.mentionees.some((mentionee) => mentionee.isSelf)
-    );
     return;
   }
 
-  const message = text.replace(/@[\S]+\s/, '').trim();
+  const messageForReminder = text
+    .replace(/@[\S]+\s/, '')
+    .trim()
+    .split('提醒');
 
-  const timeMessage = message.split('提醒')[0].trim();
-  const reminderMessage = message.split('提醒')[1].trim();
+  if (messageForReminder.length === 2) {
+    const timeMessage = messageForReminder[0].trim();
+    const reminderMessage = messageForReminder[1].trim();
 
-  // 確保訊息字串是由「時間字串」＋「提醒」+ 「訊息」組成
-  if (!timeMessage || !reminderMessage) return;
+    // 確保訊息字串是由「時間字串」＋「提醒」+ 「訊息」組成
+    if (!timeMessage || !reminderMessage) return;
 
-  const parsedTime = timeParser(timeMessage);
-  console.log(parsedTime, timeMessage, reminderMessage, message);
-  // if (!parsedTime) {
-  //   return client.replyMessage(event.replyToken, {
-  //     type: 'text',
-  //     text: '設定提醒失敗：無法解析時間，請使用「@bot 今天下午九點/明天上午八點提醒吃飯」格式',
-  //   });
-  // }
+    const parsedTime = timeParser(timeMessage);
+    console.log(parsedTime, timeMessage, reminderMessage, messageForReminder);
+    // if (!parsedTime) {
+    //   return client.replyMessage(event.replyToken, {
+    //     type: 'text',
+    //     text: '設定提醒失敗：無法解析時間，請使用「@bot 今天下午九點/明天上午八點提醒吃飯」格式',
+    //   });
+    // }
 
-  // // 使用 Firebase 儲存提醒
-  // await db.addReminder(groupId, parsedTime, reminderMessage);
+    // // 使用 Firebase 儲存提醒
+    // await db.addReminder(groupId, parsedTime, reminderMessage);
 
-  // // 設定排程
-  // schedule.scheduleJob(parsedTime, async () => {
-  //   await client.pushMessage(groupId, {
-  //     type: 'text',
-  //     text: `提醒：${message}`,
-  //   });
-  //   await db.deleteReminder(groupId, parsedTime.toISOString());
-  // });
+    // // 設定排程
+    // schedule.scheduleJob(parsedTime, async () => {
+    //   await client.pushMessage(groupId, {
+    //     type: 'text',
+    //     text: `提醒：${messageForReminder}`,
+    //   });
+    //   await db.deleteReminder(groupId, parsedTime.toISOString());
+    // });
 
-  // return client.replyMessage(event.replyToken, {
-  //   type: 'text',
-  //   text: `已設定提醒：${parsedTime} ${reminderMessage}`,
-  // });
+    // return client.replyMessage(event.replyToken, {
+    //   type: 'text',
+    //   text: `已設定提醒：${parsedTime} ${reminderMessage}`,
+    // });
+  }
 }
 
 app.listen(3000, () => console.log('Bot running on port 3000'));

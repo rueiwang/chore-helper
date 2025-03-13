@@ -54,14 +54,6 @@ function convertChineseToChrono(chineseStr, refDate = new Date()) {
     十九: 19,
   };
 
-  // 測試轉換函式
-  function convertChineseToNumber(chinese) {
-    return chineseToNumber[chinese] || null;
-  }
-
-  // 測試
-  console.log(convertChineseToNumber('一')); // 1
-
   const year = refDate.getFullYear();
   const month = refDate.getMonth() + 1;
   const date = refDate.getDate();
@@ -69,6 +61,12 @@ function convertChineseToChrono(chineseStr, refDate = new Date()) {
 
   // 處理字串的正則表達式模式
   let result = chineseStr;
+  let prefix = '';
+
+  if (/(今天|明天)/.test(result)) {
+    prefix = timeMap[result.substring(0, 2)] + ' ';
+    result = result.substring(2);
+  }
 
   // 1. 處理日期格式「XXXX年XX月XX日」
   if (/(\d{4})年(\d{1,2})月(\d{1,2})日/.test(result)) {
@@ -81,9 +79,9 @@ function convertChineseToChrono(chineseStr, refDate = new Date()) {
   }
 
   // 3. 處理星期（支援「星期X」或「週X」）
-  if (/(上|下)(星期|週)([一二三四五六日])/.test(result)) {
+  if (/(上|下)?(星期|週)([一二三四五六日])/.test(result)) {
     result = result.replace(
-      /([上|下])(星期|週)([一二三四五六日])/g,
+      /([上|下])?(星期|週)([一二三四五六日])/g,
       (match, prefix, week, day) => {
         return `${timeMap[prefix] || ''} ${weekdayMap[day]}`;
       }
@@ -96,69 +94,67 @@ function convertChineseToChrono(chineseStr, refDate = new Date()) {
     result = result.replace(/(\d+)(天後)/, 'in $1 days');
   }
 
+  if (/(上午|下午)/.test(result)) {
+    prefix += timeMap[result.substring(0, 2)] + ' ';
+    result = result.substring(2);
+  }
+
   // 8. 處理具體時間「上午X點」「下午X點Y分」
-  if (/(上午|下午)?([\d])點(\d*)分?/.test(result)) {
-    result = result.replace(
-      /(上午|下午)?([\d])點(\d*)分?/,
-      (match, period, hour, minute) => {
-        const periodStr =
-          period === '上午' ? 'AM' : period === '下午' ? 'PM' : '';
-        const minuteStr = minute ? `:${minute.padStart(2, '0')}` : ':00';
-        return `${hour}${minuteStr} ${periodStr}`.trim();
-      }
-    );
+  if (/([\d])點(\d*)分?/.test(result)) {
+    result = result.replace(/([\d])點(\d*)分?/, (match, hour, minute) => {
+      const minuteStr = minute ? `:${minute.padStart(2, '0')}` : ':00';
+      return `${hour}${minuteStr}`.trim();
+    });
   }
 
   if (
-    /(上午|下午)?\s*(一|二|三|四|五|六|七|八|九|十|十一|十二|十三|十四|十五|十六|十七|十八|十九)點(半)?/.test(
+    /\s*(一|二|三|四|五|六|七|八|九|十|十一|十二|十三|十四|十五|十六|十七|十八|十九)點(半)?/.test(
       result
     )
   ) {
     result = result.replace(
-      /(上午|下午)?\s*(一|二|三|四|五|六|七|八|九|十|十一|十二|十三|十四|十五|十六|十七|十八|十九)點(半)?/,
-      (match, period, hour, minute) => {
-        const periodStr =
-          period === '上午' ? 'AM' : period === '下午' ? 'PM' : '';
-        return `${chineseToNumber[hour]}:30 ${periodStr}`.trim();
+      /\s*(一|二|三|四|五|六|七|八|九|十|十一|十二|十三|十四|十五|十六|十七|十八|十九)點(半)?/,
+      (match, hour, minute) => {
+        return `${chineseToNumber[hour]}:30`.trim();
       }
     );
   }
 
   // 9. 替換其他簡單時間詞彙
-  Object.keys(timeMap).forEach((key) => {
-    result = result.replace(new RegExp(key, 'g'), timeMap[key]);
-  });
+  //   Object.keys(timeMap).forEach((key) => {
+  //     result = result.replace(new RegExp(key, 'g'), timeMap[key]);
+  //   });
 
   // 10. 清理多餘空格並返回
-  return result.trim().replace(/\s+/g, ' ');
+  return (prefix + result).trim().replace(/\s+/g, ' ');
 }
 
 // 測試範例
-const testCases = [
-  '今天',
-  '明天上午10點',
-  '昨天',
-  '星期五',
-  '下週五',
-  '上星期三',
-  '2025年3月11日',
-  '3月11日',
-  '下午3點30分',
-  '2天後',
-  '下午五點半',
-];
+// const testCases = [
+//   '今天',
+//   '明天上午10點',
+//   '昨天',
+//   '星期五',
+//   '下週五',
+//   '上星期三',
+//   '2025年3月11日',
+//   '3月11日',
+//   '下午3點30分',
+//   '2天後',
+//   '下午五點半',
+// ];
 
-testCases.forEach((test) => {
-  const converted = convertChineseToChrono(test);
-  console.log(`中文: ${test} -> 英文: ${converted}`);
-  const parsed = chrono.parseDate(converted, new Date()); // 假設參考日期為 2025-03-11
-  console.log(`解析結果: ${parsed}`);
-  console.log('---');
-});
+// testCases.forEach((test) => {
+//   const converted = convertChineseToChrono(test);
+//   console.log(`中文: ${test} -> 英文: ${converted}`);
+//   const parsed = chrono.parseDate(converted, new Date());
+//   console.log(`解析結果: ${parsed}`);
+//   console.log('---');
+// });
 
 function parseTime(input, referenceDate = new Date()) {
   const chronoString = convertChineseToChrono(input, referenceDate);
-  console.log(chronoString);
+  console.log('chronoString: ', chronoString);
   const parsedTime = chrono.parseDate(chronoString, referenceDate);
   if (!parsedTime) {
     return null;

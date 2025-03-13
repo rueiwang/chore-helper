@@ -60,21 +60,21 @@ async function handleEvent(event) {
     // }
 
     // // 使用 Firebase 儲存提醒
-    // await db.addReminder(groupId, parsedTime, reminderMessage);
+    await db.addReminder(groupId, parsedTime, reminderMessage);
 
     // // 設定排程
-    // schedule.scheduleJob(parsedTime, async () => {
-    //   await client.pushMessage(groupId, {
-    //     type: 'text',
-    //     text: `提醒：${messageForReminder}`,
-    //   });
-    //   await db.deleteReminder(groupId, parsedTime.toISOString());
-    // });
+    schedule.scheduleJob(parsedTime, async () => {
+      await client.pushMessage(groupId, {
+        type: 'text',
+        text: `提醒：${reminderMessage}`,
+      });
+      await db.deleteReminder(groupId, parsedTime.toISOString());
+    });
 
-    // return client.replyMessage(event.replyToken, {
-    //   type: 'text',
-    //   text: `已設定提醒：${parsedTime} ${reminderMessage}`,
-    // });
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `已設定提醒：${parsedTime} ${reminderMessage}`,
+    });
   }
 }
 

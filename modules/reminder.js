@@ -44,7 +44,13 @@ async function setSchedule(groupId, time, message, recurrence = null) {
           `已完成${maxCount}次循環提醒，若要繼續提醒請重新設定`
         );
         await db.deleteReminder(groupId, time.toISOString());
-        this.cancel(); // 取消排程
+        // 取得當前的 job 並取消
+        const jobs = schedule.scheduledJobs;
+        Object.values(jobs).forEach((job) => {
+          if (job.nextInvocation().getTime() === time.getTime()) {
+            job.cancel();
+          }
+        });
       }
     });
   } else {

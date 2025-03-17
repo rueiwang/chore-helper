@@ -239,21 +239,21 @@ function formatDate(date) {
 }
 
 // 測試案例
-const testCases = [
-  "今天晚上6點",
-  "每週一",
-  "每星期二",
-  "每月10號",
-  "每月3日",
-  "明天下午3點",
-  "下週五晚上8點",
-];
+// const testCases = [
+//   "今天晚上6點",
+//   "每週一",
+//   "每星期二",
+//   "每月10號",
+//   "每月3日",
+//   "明天下午3點",
+//   "下週五晚上8點",
+// ];
 
-testCases.forEach((test) => {
-  const result = parseTime(test);
-  console.log(`輸入: ${test}`);
-  console.log("解析結果:", result);
-  console.log("---");
-});
+// testCases.forEach((test) => {
+//   const result = parseTime(test);
+//   console.log(`輸入: ${test}`);
+//   console.log("解析結果:", result);
+//   console.log("---");
+// });
 
 module.exports = parseTime;

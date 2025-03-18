@@ -19,8 +19,8 @@ describe("Reminder Tests", () => {
   beforeEach(() => {
     // 清除所有 mock 的調用記錄
     jest.clearAllMocks();
-    // 模擬時間為 2024-05-20 星期一 10:00
-    jest.useFakeTimers().setSystemTime(new Date("2024-05-20T10:00:00"));
+    // 模擬時間為 2024-05-10 星期一 10:00
+    jest.useFakeTimers().setSystemTime(new Date("2024-05-10T10:00:00"));
   });
 
   afterEach(() => {
@@ -37,14 +37,13 @@ describe("Reminder Tests", () => {
       type: parsedTime.type,
       count: 2, // 測試用，只執行兩次
     };
-
     await addReminder(mockGroupId, new Date(), reminderMessage, recurrence);
 
     // 快轉到下週一 15:00
     jest.advanceTimersByTime(7 * 24 * 60 * 60 * 1000);
 
     // 驗證是否發送了提醒
-    expect(sendTextMessage).toHaveBeenCalledWith(
+    await expect(sendTextMessage).toHaveBeenCalledWith(
       mockGroupId,
       expect.stringContaining("第1次週循環提醒：寫週報")
     );
@@ -53,7 +52,7 @@ describe("Reminder Tests", () => {
     jest.advanceTimersByTime(7 * 24 * 60 * 60 * 1000);
 
     // 驗證第二次提醒
-    expect(sendTextMessage).toHaveBeenCalledWith(
+    await expect(sendTextMessage).toHaveBeenCalledWith(
       mockGroupId,
       expect.stringContaining("第2次週循環提醒：寫週報")
     );
@@ -61,7 +60,7 @@ describe("Reminder Tests", () => {
     // 驗證完成訊息
     expect(sendTextMessage).toHaveBeenCalledWith(
       mockGroupId,
-      expect.stringContaining("已完成2次循環提醒")
+      expect.stringContaining("已完成2次循環提醒，若要繼續提醒請重新設定")
     );
   });
 
@@ -90,7 +89,7 @@ describe("Reminder Tests", () => {
 
   test("一次性提醒應該只觸發一次", async () => {
     // 設定明天下午三點的提醒
-    const timeMessage = "明天下午三點";
+    const timeMessage = "明天下午三點半";
     const reminderMessage = "開會";
 
     const parsedTime = timeParser(timeMessage);
@@ -99,9 +98,8 @@ describe("Reminder Tests", () => {
 
     // 快轉到明天下午三點
     jest.advanceTimersByTime(29 * 60 * 60 * 1000);
-
     // 驗證是否發送了提醒
-    expect(sendTextMessage).toHaveBeenCalledWith(
+    await expect(sendTextMessage).toHaveBeenCalledWith(
       mockGroupId,
       expect.stringContaining("提醒：開會")
     );
